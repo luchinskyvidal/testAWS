@@ -1,0 +1,83 @@
+{
+  "variables": {
+    "aws_access_key": "KEYAWS",
+    "aws_secret_key": "SECRETAWS",
+    "region": "us-east-1",
+    "vpc_id": "IDVPC-CREADA-ANTES",
+    "subnet_zone_1_id": "subnet-XXXXX",
+    "subnet_zone_2_id": "subnet-XXXXX",
+    "db_instance_identifier_1": "IDENTIFICADOR-INSTANCIA",
+    "db_instance_identifier_2": "IDENTIFICADOR-INSTANCIA",
+    "db_group_name_subnet_1": "SUBNETGENERADAANTES",
+    "db_group_name_subnet_2": "SUBNETGENERADAANTES"
+  },
+  "builders": [
+    {
+      "name": "builder-zone-1",
+      "type": "amazon-ebs",
+      "region": "{{user `region`}}",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "most_recent": true,
+        "owners": ["099720109477"]
+      },
+      "instance_type": "t2.micro",
+      "ssh_username": "ubuntu",
+      "ami_name": "packer-postgres-ami",
+      "run_tags": {
+        "Name": "packer-postgres"
+      },
+      "tags": {
+        "environment": "dev"
+      },
+      "associate_public_ip_address": true,
+      "subnet_id": "{{user `subnet_zone_1_id`}}"
+    },
+    {
+      "name": "builder-zone-2",
+      "type": "amazon-ebs",
+      "region": "{{user `region`}}",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "most_recent": true,
+        "owners": ["099720109477"]
+      },
+      "instance_type": "t2.micro",
+      "ssh_username": "ubuntu",
+      "ami_name": "packer-postgres-ami",
+      "run_tags": {
+        "Name": "packer-postgres"
+      },
+      "tags": {
+        "environment": "dev"
+      },
+      "associate_public_ip_address": true,
+      "subnet_id": "{{user `subnet_zone_2_id`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "configure_rds.sh",
+      "environment_vars": [
+        "DB_INSTANCE_IDENTIFIER_1={{user `db_instance_identifier_1`}}",
+        "DB_INSTANCE_IDENTIFIER_2={{user `db_instance_identifier_2`}}",
+        "DB_SUBNET_GROUP_NAME_1={{user `db_group_name_subnet_1`}}",
+        "DB_SUBNET_GROUP_NAME_2={{user `db_group_name_subnet_2`}}",
+        "VPC_SECURITY_GROUP_IDS=sg-0334f0394cfcbe72d"
+      ]
+    }
+  ]
+}

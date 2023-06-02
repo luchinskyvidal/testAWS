@@ -1,0 +1,89 @@
+{
+    "variables": {
+      "aws_access_key": "TU_ACCESS_KEY",
+      "aws_secret_key": "TU_SECRET_KEY",
+      "region": "us-east-1",
+      "vpc_id": "VPC_ID",
+      "subnet_zone_1_id": "SUBNET_ZONE_1_ID",
+      "subnet_zone_2_id": "SUBNET_ZONE_2_ID",
+      "db_instance_endpoint": "DB_INSTANCE_ENDPOINT",
+      "db_name": "DB_NAME",
+      "db_username": "DB_USERNAME",
+      "db_password": "DB_PASSWORD"
+    },
+    "builders": [
+      {
+        "name": "builder-zone-1-app",
+        "type": "amazon-ebs",
+        "region": "{{user `region`}}",
+        "access_key": "{{user `aws_access_key`}}",
+        "secret_key": "{{user `aws_secret_key`}}",
+        "source_ami_filter": {
+          "filters": {
+            "virtualization-type": "hvm",
+            "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+            "root-device-type": "ebs"
+          },
+          "most_recent": true,
+          "owners": ["099720109477"]
+        },
+        "instance_type": "t2.micro",
+        "ssh_username": "ubuntu",
+        "ami_name": "wordpress-ami-zone1",
+        "run_tags": {
+          "Name": "wordpress-ami-zone1"
+        },
+        "tags": {
+          "environment": "dev"
+        },
+        "associate_public_ip_address": true,
+        "subnet_id": "{{user `subnet_zone_1_id`}}"
+      },
+      {
+        "name": "builder-zone-2-app",
+        "type": "amazon-ebs",
+        "region": "{{user `region`}}",
+        "access_key": "{{user `aws_access_key`}}",
+        "secret_key": "{{user `aws_secret_key`}}",
+        "source_ami_filter": {
+          "filters": {
+            "virtualization-type": "hvm",
+            "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+            "root-device-type": "ebs"
+          },
+          "most_recent": true,
+          "owners": ["099720109477"]
+        },
+        "instance_type": "t2.micro",
+        "ssh_username": "ubuntu",
+        "ami_name": "wordpress-ami-zone2",
+        "run_tags": {
+          "Name": "wordpress-ami-zone2"
+        },
+        "tags": {
+          "environment": "dev"
+        },
+        "associate_public_ip_address": true,
+        "subnet_id": "{{user `subnet_zone_2_id`}}"
+      }
+    ],
+    "provisioners": [
+      {
+        "type": "shell",
+        "script": "install_wordpress.sh",
+        "environment_vars": [
+          "DB_HOST={{user `db_instance_endpoint`}}",
+          "DB_NAME={{user `db_name`}}",
+          "DB_USER={{user `db_username`}}",
+          "DB_PASSWORD={{user `db_password`}}"
+        ]
+      }
+    ],
+    "post-processors": [
+      {
+        "type": "shell-local",
+        "command": "echo 'Wordpress AMIs created.'"
+      }
+    ]
+  }
+  
